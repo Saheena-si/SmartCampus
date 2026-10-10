@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartCampus — Intelligent Classroom Availability & Booking System</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP HEADER & NAVIGATION
+       ============================================================ -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-section" onclick="switchTab('dashboard'); return false;">
+        <div class="brand-logo-icon">SC</div>
+        <div class="brand-titles">
+          <h1>Smart<span>Campus</span></h1>
+          <p>Classroom Availability & Booking</p>
+        </div>
+      </a>
+
+      <!-- Dynamic Navigation Links -->
+      <nav class="header-nav" id="header-nav-container" role="navigation" aria-label="Main Navigation">
+        <button class="nav-link active" id="nav-btn-dashboard" onclick="switchTab('dashboard')">
+          <span>🏢</span> Availability
+        </button>
+        <button class="nav-link" id="nav-btn-recommend" onclick="switchTab('recommend')">
+          <span>🎯</span> Match Finder
+        </button>
+        <button class="nav-link" id="nav-btn-book" onclick="switchTab('book')">
+          <span>📅</span> Book Room
+        </button>
+        <button class="nav-link" id="nav-btn-track" onclick="switchTab('track')">
+          <span>📋</span> My Bookings
+        </button>
+        <button class="nav-link" id="nav-btn-staff" style="display:none;" onclick="switchTab('staff')">
+          <span>👨‍🏫</span> Staff Dashboard
+        </button>
+        <button class="nav-link" id="nav-btn-cr" style="display:none;" onclick="switchTab('cr')">
+          <span>🎓</span> CR Dashboard
+        </button>
+        <button class="nav-link" id="nav-btn-admin" style="display:none;" onclick="switchTab('admin')">
+          <span>⚙️</span> Admin Dashboard
+        </button>
+      </nav>
+
+      <!-- User Profile & Demo Switcher -->
+      <div class="header-actions">
+        <!-- Quick Demo Switcher -->
+        <div class="demo-switcher-dropdown">
+          <select id="quick-role-select" class="select-control" style="font-size:0.75rem; padding: 0.35rem 0.5rem; background:#1E293B; color:#FFFFFF; border-color:#334155;" onchange="quickSwitchUser(this.value)">
+            <option value="" disabled selected>Switch Demo User...</option>
+            <option value="student1">👨‍🎓 Student (Aarav)</option>
+            <option value="staff1">👨‍🏫 Staff (Prof. Rajesh)</option>
+            <option value="cr_csea">🎓 CR: III CSE A (Pooja)</option>
+            <option value="cr_cseb">🎓 CR: III CSE B (Karthik)</option>
+            <option value="admin">⚙️ Admin (Campus Admin)</option>
+          </select>
+        </div>
+
+        <!-- Auth Status Pill -->
+        <div id="auth-status-container" style="display: flex; align-items: center; gap: 0.5rem;">
+          <span id="user-info-pill" class="user-role-badge role-student">
+            👤 Student (student1)
+          </span>
+          <button id="auth-btn" class="btn btn-secondary btn-sm" onclick="handleAuthButtonClick()">
+            Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN CONTENT CONTAINER
+       ============================================================ -->
+  <main class="main-wrapper">
+
+    <!-- ============================================================
+         TAB 1: STUDENT DASHBOARD & AVAILABILITY EXPLORER
+         ============================================================ -->
+    <section id="tab-dashboard" class="tab-pane active">
+      <div class="page-hero">
+        <div>
+          <h2>Classroom Availability & Schedule Explorer</h2>
+          <p>Real-time slot analysis based on academic timetables, approved reservations, and maintenance schedules.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="openBookingModal()">+ Book a Room</button>
+          <button class="btn btn-secondary" onclick="switchTab('recommend')">🎯 Recommend a Room</button>
+        </div>
+      </div>
+
+      <!-- Transparent Heuristic Scheduling Notice -->
+      <div class="transparent-disclaimer">
+        <div>
+          <strong>Transparent Heuristic Engine:</strong> Availability is computed mathematically by correlating academic timetable schedules, confirmed room bookings, staff manual updates, and maintenance windows. No sensor-based occupancy claimed.
+        </div>
+        <span class="system-badge">Deterministic Logic</span>
+      </div>
+
+      <!-- Summary Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Total Classrooms</p>
+            <h3 id="stat-total-rooms">--</h3>
+          </div>
+          <div class="stat-icon total">🏛️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Available Slot</p>
+            <h3 id="stat-available-rooms" style="color: var(--status-available-dot);">--</h3>
+          </div>
+          <div class="stat-icon available">✓</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Occupied by Class</p>
+            <h3 id="stat-occupied-rooms" style="color: var(--status-occupied-dot);">--</h3>
+          </div>
+          <div class="stat-icon occupied">📚</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Reserved / Booked</p>
+            <h3 id="stat-reserved-rooms" style="color: var(--status-reserved-dot);">--</h3>
+          </div>
+          <div class="stat-icon reserved">📌</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Under Maintenance</p>
+            <h3 id="stat-maintenance-rooms" style="color: var(--status-maintenance-dot);">--</h3>
+          </div>
+          <div class="stat-icon maintenance">🔧</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls Toolbar -->
+      <div class="control-panel">
+        <div class="time-slot-bar">
+          <div class="filter-group">
+            <label for="slot-date">Target Date</label>
+            <input type="date" id="slot-date" class="input-control" onchange="loadAvailability()">
+          </div>
+          <div class="filter-group">
+            <label for="slot-start-time">Start Time</label>
+            <input type="time" id="slot-start-time" class="input-control" value="09:00" onchange="loadAvailability()">
+          </div>
+          <div class="filter-group">
+            <label for="slot-end-time">End Time</label>
+            <input type="time" id="slot-end-time" class="input-control" value="10:00" onchange="loadAvailability()">
+          </div>
+          <div class="filter-group">
+            <label for="filter-building">Building</label>
+            <select id="filter-building" class="select-control" onchange="loadAvailability()">
+              <option value="All">All Buildings</option>
+              <option value="Department Block D">Department Block D</option>
+              <option value="Computing Center">Computing Center</option>
+              <option value="Engineering Hall">Engineering Hall</option>
+              <option value="Science Complex">Science Complex</option>
+              <option value="Tech Tower">Tech Tower</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-min-cap">Min Capacity</label>
+            <select id="filter-min-cap" class="select-control" onchange="loadAvailability()">
+              <option value="">Any Capacity</option>
+              <option value="30">30+ seats</option>
+              <option value="40">40+ seats</option>
+              <option value="60">60+ seats</option>
+              <option value="100">100+ seats</option>
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-navy" onclick="resetSlotToNow()">⏱️ Current Time</button>
+          </div>
+        </div>
+
+        <div class="secondary-filters">
+          <div class="filter-group" style="max-width: 300px;">
+            <label for="search-rooms">Search Classrooms</label>
+            <input type="text" id="search-rooms" class="input-control" placeholder="Search room #, building, lab..." oninput="debounceAvailability()">
+          </div>
+
+          <div style="flex: 1;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--navy-medium); display: block; margin-bottom: 0.35rem;">Filter by Facility Amenities</label>
+            <div class="facilities-pills" id="facilities-pill-container">
+              <span class="facility-pill" onclick="toggleFacilityFilter('Projector', this)">Projector</span>
+              <span class="facility-pill" onclick="toggleFacilityFilter('Smart Board', this)">Smart Board</span>
+              <span class="facility-pill" onclick="toggleFacilityFilter('Air Conditioning', this)">Air Conditioning</span>
+              <span class="facility-pill" onclick="toggleFacilityFilter('Audio System', this)">Audio System</span>
+              <span class="facility-pill" onclick="toggleFacilityFilter('Lab Computers', this)">Lab Computers</span>
+              <span class="facility-pill" onclick="toggleFacilityFilter('Wheelchair Accessible', this)">Wheelchair Accessible</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Slot Filter Banner -->
+      <div id="active-slot-banner" style="margin-bottom: 1.25rem; font-size: 0.88rem; color: var(--navy-light); display: flex; align-items: center; justify-content: space-between;">
+        <span id="slot-banner-text">Evaluating availability for: Loading...</span>
+        <span id="match-count-text" style="font-weight: 600; color: var(--cyan-dark);">Showing 0 classrooms</span>
+      </div>
+
+      <!-- Classroom Cards Grid -->
+      <div class="classroom-grid" id="classroom-cards-container">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 2: SMART ROOM RECOMMENDATION (Transparent Heuristic)
+         ============================================================ -->
+    <section id="tab-recommend" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Smart Room Match Finder</h2>
+          <p>Find the best suited classroom ranked by capacity efficiency, equipment requirements, and building proximity.</p>
+        </div>
+      </div>
+
+      <div class="recommend-grid">
+        <!-- Recommendation Criteria Form -->
+        <div class="recommend-form-card">
+          <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🎯</span> Requirement Parameters
+          </h3>
+
+          <form id="recommend-form" onsubmit="handleRecommendationSubmit(event)">
+            <div class="form-group">
+              <label for="rec-date">Event Date *</label>
+              <input type="date" id="rec-date" class="input-control" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label for="rec-start-time">Start Time *</label>
+                <input type="time" id="rec-start-time" class="input-control" value="14:00" required>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="rec-end-time">End Time *</label>
+                <input type="time" id="rec-end-time" class="input-control" value="15:30" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="rec-attendees">Expected Attendee Count *</label>
+              <input type="number" id="rec-attendees" class="input-control" min="1" max="500" value="35" required>
+              <small style="font-size: 0.75rem; color: var(--text-muted);">Optimal matching prioritizes rooms with 65%–95% capacity utilization.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="rec-building">Preferred Building (Optional)</label>
+              <select id="rec-building" class="select-control">
+                <option value="">No Preference</option>
+                <option value="Department Block D">Department Block D (CSE A & B)</option>
+                <option value="Computing Center">Computing Center (CC1, CC2, CC3)</option>
+                <option value="Engineering Hall">Engineering Hall</option>
+                <option value="Science Complex">Science Complex</option>
+                <option value="Tech Tower">Tech Tower</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label style="margin-bottom: 0.5rem; display: block;">Mandatory Required Facilities</label>
+              <div class="facilities-pills" id="rec-facility-options">
+                <span class="facility-pill" onclick="toggleRecFacility('Projector', this)">Projector</span>
+                <span class="facility-pill" onclick="toggleRecFacility('Smart Board', this)">Smart Board</span>
+                <span class="facility-pill" onclick="toggleRecFacility('Air Conditioning', this)">Air Conditioning</span>
+                <span class="facility-pill" onclick="toggleRecFacility('Audio System', this)">Audio System</span>
+                <span class="facility-pill" onclick="toggleRecFacility('Lab Computers', this)">Lab Computers</span>
+                <span class="facility-pill" onclick="toggleRecFacility('Wheelchair Accessible', this)">Wheelchair Accessible</span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; justify-content: center;">
+              🔍 Compute Recommended Rooms
+            </button>
+          </form>
+        </div>
+
+        <!-- Recommendation Results Area -->
+        <div class="recommend-results" id="recommend-results-area">
+          <div class="empty-state">
+            <div class="empty-icon">🎯</div>
+            <h3>Enter Event Parameters to Generate Recommendations</h3>
+            <p>Our transparent heuristic scoring engine will rank all free rooms, prevent room wastage, and verify 100% schedule compatibility.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 3: BOOK A ROOM FORM
+         ============================================================ -->
+    <section id="tab-book" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Submit Classroom Booking Request</h2>
+          <p>Request reservations for guest lectures, seminars, club meetings, or study workshops.</p>
+        </div>
+      </div>
+
+      <div style="max-width: 760px; margin: 0 auto; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+        <form id="direct-booking-form" onsubmit="handleDirectBookingSubmit(event)">
+          <div class="form-group">
+            <label for="direct-classroom-select">Select Classroom or Lab *</label>
+            <select id="direct-classroom-select" class="select-control" required onchange="handleDirectRoomChange()">
+              <option value="" disabled selected>-- Choose Classroom --</option>
+            </select>
+            <small id="direct-room-capacity-hint" style="font-size:0.75rem; color: var(--cyan-dark); font-weight:600;"></small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-user-name">Your Full Name *</label>
+              <input type="text" id="direct-user-name" class="input-control" placeholder="e.g. Aarav Sharma" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-user-email">Campus Email *</label>
+              <input type="email" id="direct-user-email" class="input-control" placeholder="name@campus.edu" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-user-role">Requester Category *</label>
+              <select id="direct-user-role" class="select-control" required>
+                <option value="Student">Student</option>
+                <option value="CR">Class Representative</option>
+                <option value="Staff">Faculty / Staff</option>
+                <option value="Club Lead">Student Club Lead</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-attendees">Expected Attendee Count *</label>
+              <input type="number" id="direct-attendees" class="input-control" min="1" max="500" value="25" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="direct-purpose">Purpose of Reservation *</label>
+            <input type="text" id="direct-purpose" class="input-control" placeholder="e.g. Competitive Coding Workshop & Team Practice" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-date">Reservation Date *</label>
+              <input type="date" id="direct-date" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-start-time">Start Time *</label>
+              <input type="time" id="direct-start-time" class="input-control" value="16:30" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="direct-end-time">End Time *</label>
+              <input type="time" id="direct-end-time" class="input-control" value="18:00" required>
+            </div>
+          </div>
+
+          <div style="background: #F1F5F9; border-radius: 8px; padding: 0.85rem; margin: 1.25rem 0; font-size: 0.8rem; color: var(--navy-light);">
+            ℹ️ <strong>Reservation Policy:</strong> Submitted requests remain in <strong>Pending</strong> status until verified and approved by Department Staff or Campus Administrator. Pending requests do not prematurely lock room slots.
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1rem; padding: 0.85rem;">
+            Submit Booking Request
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 4: TRACK REQUESTS / MY BOOKINGS
+         ============================================================ -->
+    <section id="tab-track" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Booking Requests & Status Tracker</h2>
+          <p>Track request statuses (Pending, Approved, Rejected) and view administrative remarks.</p>
+        </div>
+      </div>
+
+      <div class="control-panel" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-navy btn-sm" id="btn-filter-all" onclick="filterBookingTable('All')">All Statuses</button>
+          <button class="btn btn-secondary btn-sm" id="btn-filter-pending" onclick="filterBookingTable('Pending')">⏳ Pending</button>
+          <button class="btn btn-secondary btn-sm" id="btn-filter-approved" onclick="filterBookingTable('Approved')">✅ Approved</button>
+          <button class="btn btn-secondary btn-sm" id="btn-filter-rejected" onclick="filterBookingTable('Rejected')">❌ Rejected</button>
+          
+          <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="track-search-input" class="input-control" placeholder="Search by code, room, user..." style="width: 250px;" oninput="debounceBookingTracker()">
+            <button class="btn btn-primary btn-sm" onclick="loadBookingsTracker()">🔄 Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tracking Code</th>
+              <th>Classroom</th>
+              <th>Requester</th>
+              <th>Purpose</th>
+              <th>Date & Time Window</th>
+              <th>Attendees</th>
+              <th>Status</th>
+              <th>Admin Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-tracker-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 5: STAFF DASHBOARD
+         ============================================================ -->
+    <section id="tab-staff" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Staff Management Dashboard</h2>
+          <p>Review booking requests, record confirmed room occupancy, and report class/lab cancellations.</p>
+        </div>
+        <span class="user-role-badge role-staff">Staff Portal</span>
+      </div>
+
+      <!-- Quick Pending Approvals Alert Queue -->
+      <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700; display:flex; align-items:center; gap:0.5rem;">
+            <span>⚡</span> Booking Approvals Queue
+          </h3>
+          <span class="system-badge" id="staff-pending-count">Pending Requests</span>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Room</th>
+                <th>Requester</th>
+                <th>Purpose</th>
+                <th>Date & Time</th>
+                <th>Attendees</th>
+                <th>Current Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staff-approvals-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Staff Tools Grid: Manual Slot Updates + Cancellation Reporting -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Tool 1: Record Manual Slot Occupancy / Extra Class -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 1rem;">
+            📌 Record Manual Availability Update
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Record confirmed physical occupancy, extra classes not in timetable, or reserve rooms for departmental meetings.
+          </p>
+
+          <form id="staff-manual-update-form" onsubmit="handleStaffManualUpdate(event)">
+            <div class="form-group">
+              <label for="manual-room-select">Classroom / Lab *</label>
+              <select id="manual-room-select" class="select-control" required></select>
+            </div>
+            <div class="form-group">
+              <label for="manual-date">Date *</label>
+              <input type="date" id="manual-date" class="input-control" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="flex:1;">
+                <label for="manual-start">Start Time *</label>
+                <input type="time" id="manual-start" class="input-control" value="16:30" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label for="manual-end">End Time *</label>
+                <input type="time" id="manual-end" class="input-control" value="18:00" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="manual-reason">Reason / Description *</label>
+              <input type="text" id="manual-reason" class="input-control" placeholder="e.g. Additional Special Lecture on Distributed Algorithms" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%; justify-content:center; padding:0.6rem;">
+              Save Manual Update
+            </button>
+          </form>
+        </div>
+
+        <!-- Tool 2: Report Class / Lab Session Cancellation -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 1rem;">
+            ❌ Report Timetable Session Cancellation
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Cancelling a specific class or lab session removes that session's conflict on the selected date while keeping the recurring timetable intact.
+          </p>
+
+          <form id="staff-cancel-form" onsubmit="handleStaffCancellation(event)">
+            <div class="form-group">
+              <label for="cancel-class-select">Select Scheduled Class Session *</label>
+              <select id="cancel-class-select" class="select-control" required></select>
+            </div>
+            <div class="form-group">
+              <label for="cancel-date">Cancellation Date *</label>
+              <input type="date" id="cancel-date" class="input-control" required>
+            </div>
+            <div class="form-group">
+              <label for="cancel-reason">Cancellation Reason *</label>
+              <input type="text" id="cancel-reason" class="input-control" placeholder="e.g. Faculty attending academic colloquium" required>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; padding:0.6rem; color:#991B1B; border-color:#FCA5A5;">
+              Record Session Cancellation
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Active Manual Updates & Cancellations Log -->
+      <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.05rem; color: var(--navy-dark); font-weight: 700; margin-bottom: 1rem;">
+          📜 Recorded Manual Updates & Single-Session Cancellations
+        </h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Target Room</th>
+                <th>Date</th>
+                <th>Window / Class</th>
+                <th>Reason</th>
+                <th>Recorded By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="staff-logs-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 6: CLASS REPRESENTATIVE (CR) DASHBOARD
+         ============================================================ -->
+    <section id="tab-cr" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Class Representative (CR) Portal</h2>
+          <p>Manage your assigned class section timetable, report session cancellations, and submit classroom requests.</p>
+        </div>
+        <span class="user-role-badge role-cr" id="cr-assigned-badge">Assigned: III Year CSE A</span>
+      </div>
+
+      <!-- CR Assigned Section Schedule Viewer -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--navy-dark);">
+            📅 Master Weekly Schedule for <span id="cr-class-title" style="color:var(--cyan-dark);">III Year CSE A</span> (Room <span id="cr-room-number">D309</span>)
+          </h3>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Official Sessions: I (09:00) to VII (16:10)</span>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Session</th>
+                <th>Time Window</th>
+                <th>Course Code</th>
+                <th>Subject Name</th>
+                <th>Faculty In-Charge</th>
+                <th>Room</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="cr-timetable-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CR Actions: Report Cancellation & Request Class Room -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <!-- CR Form 1: Report Class Cancellation -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem;">
+            ❌ Report Class / Lab Cancellation
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Strictly authorized for classes in your assigned section only. Cancelling clears the classroom slot for other students.
+          </p>
+
+          <form id="cr-cancel-form" onsubmit="handleCRCancellation(event)">
+            <div class="form-group">
+              <label for="cr-cancel-class-select">Select Class Session from Your Section *</label>
+              <select id="cr-cancel-class-select" class="select-control" required></select>
+            </div>
+            <div class="form-group">
+              <label for="cr-cancel-date">Cancellation Date *</label>
+              <input type="date" id="cr-cancel-date" class="input-control" required>
+            </div>
+            <div class="form-group">
+              <label for="cr-cancel-reason">Reason *</label>
+              <input type="text" id="cr-cancel-reason" class="input-control" placeholder="e.g. Faculty attending symposium / Lab maintenance" required>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; padding: 0.6rem; color: #991B1B; border-color: #FCA5A5;">
+              Submit Cancellation Notice
+            </button>
+          </form>
+        </div>
+
+        <!-- CR Form 2: Request Room for Class Committee / Extra Session -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem;">
+            📝 Request Room for Section Activity
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Submit requests for Class Committee Meetings, placement practice, or seminar rehearsals.
+          </p>
+
+          <form id="cr-booking-form" onsubmit="handleCRBooking(event)">
+            <div class="form-group">
+              <label for="cr-book-room-select">Classroom / Lab *</label>
+              <select id="cr-book-room-select" class="select-control" required></select>
+            </div>
+            <div class="form-group">
+              <label for="cr-book-purpose">Activity Purpose *</label>
+              <input type="text" id="cr-book-purpose" class="input-control" placeholder="e.g. Class Committee Meeting / Project Discussion" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="flex:1;">
+                <label for="cr-book-date">Date *</label>
+                <input type="date" id="cr-book-date" class="input-control" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label for="cr-book-start">Start Time *</label>
+                <input type="time" id="cr-book-start" class="input-control" value="16:15" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label for="cr-book-end">End Time *</label>
+                <input type="time" id="cr-book-end" class="input-control" value="17:30" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cr-book-attendees">Attendees *</label>
+              <input type="number" id="cr-book-attendees" class="input-control" min="1" max="100" value="45" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center; padding: 0.6rem;">
+              Submit CR Request
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TAB 7: ADMIN DASHBOARD
+         ============================================================ -->
+    <section id="tab-admin" class="tab-pane">
+      <div class="page-hero">
+        <div>
+          <h2>Campus Facility Administrator Portal</h2>
+          <p>Full control over classrooms, timetables, maintenance windows, user roles, and system audit history.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-secondary btn-sm" onclick="resetDemoData()">🔄 Reset Demo Data</button>
+        </div>
+      </div>
+
+      <!-- Admin Overview Metric Cards -->
+      <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Classrooms & Labs</p>
+            <h3 id="admin-stat-rooms">--</h3>
+          </div>
+          <div class="stat-icon total">🏛️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Weekly Scheduled Classes</p>
+            <h3 id="admin-stat-classes">--</h3>
+          </div>
+          <div class="stat-icon occupied">📚</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Pending Approvals</p>
+            <h3 id="admin-stat-pending" style="color: #F59E0B;">--</h3>
+          </div>
+          <div class="stat-icon reserved">⏳</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Approved Bookings</p>
+            <h3 id="admin-stat-approved" style="color: var(--status-available-dot);">--</h3>
+          </div>
+          <div class="stat-icon available">✓</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p>Maintenance Blocks</p>
+            <h3 id="admin-stat-maintenance" style="color: #E11D48;">--</h3>
+          </div>
+          <div class="stat-icon maintenance">🔧</div>
+        </div>
+      </div>
+
+      <!-- Admin Section 1: Classroom Management -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700;">Classroom & Lab Directory</h3>
+          <button class="btn btn-primary btn-sm" onclick="openAddRoomModal()">+ Add Classroom</button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Room #</th>
+                <th>Building</th>
+                <th>Floor</th>
+                <th>Capacity</th>
+                <th>Type</th>
+                <th>Facilities</th>
+                <th>Notes / Classification</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-rooms-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Section 2: Maintenance Windows -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700;">Scheduled Maintenance Blocks</h3>
+          <button class="btn btn-navy btn-sm" onclick="openAddMaintenanceModal()">+ Schedule Maintenance</button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Classroom</th>
+                <th>Start Window</th>
+                <th>End Window</th>
+                <th>Reason</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-maintenance-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Section 3: User Roles & CR Class Assignments -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700; margin-bottom: 1rem;">
+          👥 User Roles & CR Class Assignments
+        </h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Assigned Class Group (for CR)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Section 4: System Activity & Audit Trail -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.15rem; color: var(--navy-dark); font-weight: 700; margin-bottom: 1rem;">
+          📜 System Activity & Audit History
+        </h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action Type</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="admin-audit-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       MODALS
+       ============================================================ -->
+
+  <!-- Modal 1: Room Detail & Full Weekly Timetable -->
+  <div id="modal-room-detail" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header">
+        <h3 id="detail-modal-title">Classroom Schedule Details</h3>
+        <button class="modal-close-btn" onclick="closeRoomDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="detail-modal-summary" style="margin-bottom: 1rem;"></div>
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem;">Weekly Scheduled Classes (Sessions I–VII)</h4>
+        <div class="table-container" style="margin-bottom: 1rem;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Session</th>
+                <th>Time</th>
+                <th>Course</th>
+                <th>Section</th>
+                <th>Instructor</th>
+              </tr>
+            </thead>
+            <tbody id="detail-classes-tbody"></tbody>
+          </table>
+        </div>
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 0.5rem;">Approved Bookings & Reservations</h4>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Purpose</th>
+                <th>Requester</th>
+              </tr>
+            </thead>
+            <tbody id="detail-bookings-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Quick Booking Modal -->
+  <div id="modal-booking" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="booking-modal-title">Book Classroom</h3>
+        <button class="modal-close-btn" onclick="closeBookingModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-booking-form" onsubmit="handleModalBookingSubmit(event)">
+          <input type="hidden" id="modal-classroom-id">
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-user-name">Your Name *</label>
+              <input type="text" id="modal-user-name" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-user-email">Campus Email *</label>
+              <input type="email" id="modal-user-email" class="input-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-user-role">Role *</label>
+              <select id="modal-user-role" class="select-control" required>
+                <option value="Student">Student</option>
+                <option value="CR">Class Representative</option>
+                <option value="Staff">Faculty / Staff</option>
+                <option value="Club Lead">Club Lead</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-attendees">Attendees *</label>
+              <input type="number" id="modal-attendees" class="input-control" min="1" max="500" value="25" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="modal-purpose">Event Purpose *</label>
+            <input type="text" id="modal-purpose" class="input-control" placeholder="e.g. Guest Lecture on Cloud Architecture" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-date">Date *</label>
+              <input type="date" id="modal-date" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-start-time">Start Time *</label>
+              <input type="time" id="modal-start-time" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modal-end-time">End Time *</label>
+              <input type="time" id="modal-end-time" class="input-control" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; justify-content: center;">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Authentication Login Modal -->
+  <div id="modal-login" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>Sign In to SmartCampus</h3>
+        <button class="modal-close-btn" onclick="closeLoginModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="login-form" onsubmit="handleManualLogin(event)">
+          <div class="form-group">
+            <label for="login-username">Username *</label>
+            <input type="text" id="login-username" class="input-control" placeholder="e.g. student1, staff1, cr_csea, admin" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password *</label>
+            <input type="password" id="login-password" class="input-control" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; justify-content: center;">
+            Sign In
+          </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+          <small style="color: var(--text-muted); display: block; margin-bottom: 0.5rem; font-weight: 600;">Or One-Click Demo Login:</small>
+          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <button class="btn btn-secondary btn-sm" onclick="quickLoginUser('student1', 'Password@123')">👨‍🎓 Student: student1</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickLoginUser('staff1', 'Password@123')">👨‍🏫 Staff: staff1</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickLoginUser('cr_csea', 'Password@123')">🎓 CR CSE-A: cr_csea</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickLoginUser('cr_cseb', 'Password@123')">🎓 CR CSE-B: cr_cseb</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickLoginUser('admin', 'AdminPassword@123')">⚙️ Admin: admin</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Rejection Reason Modal (for Staff & Admin) -->
+  <div id="modal-reject" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>Reject Booking Request</h3>
+        <button class="modal-close-btn" onclick="closeRejectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="reject-form" onsubmit="submitRejectAction(event)">
+          <input type="hidden" id="reject-booking-id">
+          <div class="form-group">
+            <label for="reject-reason-text">Rejection Reason / Administrative Remarks *</label>
+            <textarea id="reject-reason-text" class="input-control" rows="4" style="height:auto; padding:0.5rem;" placeholder="e.g. Rejected: Room reserved exclusively for academic lab session during this time." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; color:#991B1B; border-color:#FCA5A5;">
+            Confirm Rejection
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Admin Add Classroom Modal -->
+  <div id="modal-add-room" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>Add New Classroom / Lab</h3>
+        <button class="modal-close-btn" onclick="closeAddRoomModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-room-form" onsubmit="handleAddRoomSubmit(event)">
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="ar-number">Room Number *</label>
+              <input type="text" id="ar-number" class="input-control" placeholder="e.g. D312" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="ar-building">Building *</label>
+              <input type="text" id="ar-building" class="input-control" placeholder="e.g. Department Block D" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="ar-floor">Floor *</label>
+              <input type="number" id="ar-floor" class="input-control" min="1" max="10" value="3" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="ar-capacity">Capacity *</label>
+              <input type="number" id="ar-capacity" class="input-control" min="10" max="500" value="65" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ar-type">Type</label>
+            <input type="text" id="ar-type" class="input-control" value="Classroom">
+          </div>
+          <div class="form-group">
+            <label for="ar-facilities">Facilities (comma-separated)</label>
+            <input type="text" id="ar-facilities" class="input-control" placeholder="Projector, Smart Board, AC, Audio System">
+          </div>
+          <div class="form-group">
+            <label for="ar-notes">Notes / Classification</label>
+            <input type="text" id="ar-notes" class="input-control" placeholder="e.g. Demonstration Data">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+            Save Classroom
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Admin Maintenance Scheduler Modal -->
+  <div id="modal-maintenance" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>Schedule Room Maintenance Window</h3>
+        <button class="modal-close-btn" onclick="closeMaintenanceModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="maint-form" onsubmit="handleMaintenanceSubmit(event)">
+          <div class="form-group">
+            <label for="maint-room-select">Classroom / Lab *</label>
+            <select id="maint-room-select" class="select-control" required></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="maint-start-date">Start Date *</label>
+              <input type="date" id="maint-start-date" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="maint-start-time">Start Time *</label>
+              <input type="time" id="maint-start-time" class="input-control" value="08:00" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="maint-end-date">End Date *</label>
+              <input type="date" id="maint-end-date" class="input-control" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="maint-end-time">End Time *</label>
+              <input type="time" id="maint-end-time" class="input-control" value="17:00" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="maint-reason">Maintenance Reason *</label>
+            <input type="text" id="maint-reason" class="input-control" placeholder="e.g. Projector replacement & HVAC inspection" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+            Schedule Maintenance Block
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Client JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
